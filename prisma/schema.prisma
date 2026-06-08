@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  TRAINER
+}
+
+enum Category {
+  DIET
+  EXERCISE
+  CARDIO
+}
+
+enum ExercisePart {
+  CHEST
+  SHOULDER
+  BACK
+  LEGS
+  ARMS
+  CORE
+  OTHER
+}
+
+enum Visibility {
+  PRIVATE
+  FOLLOWERS
+  PUBLIC
+}
+
+enum MediaType {
+  IMAGE
+  YOUTUBE
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  displayName  String
+  bio          String    @default("")
+  role         Role      @default(USER)
+  createdAt    DateTime  @default(now())
+  records      Record[]
+  comments     Comment[]
+  followers    Follow[]  @relation("following")
+  following    Follow[]  @relation("follower")
+}
+
+model Record {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category     Category
+  exercisePart ExercisePart?
+  recordDate   DateTime      @db.Date
+  feltNote     String        @default("")
+  hardNote     String        @default("")
+  lackingNote  String        @default("")
+  questionNote String        @default("")
+  visibility   Visibility    @default(PRIVATE)
+  createdAt    DateTime      @default(now())
+  media        RecordMedia[]
+  comments     Comment[]
+
+  @@index([userId, recordDate])
+  @@index([visibility, createdAt])
+}
+
+model RecordMedia {
+  id          String    @id @default(cuid())
+  recordId    String
+  record      Record    @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  mediaType   MediaType
+  url         String
+  storagePath String?
+  sortOrder   Int       @default(0)
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  recordId  String
+  record    Record   @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([recordId, createdAt])
+}
+
+model Follow {
+  followerId  String
+  follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+}

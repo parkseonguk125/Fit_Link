@@ -1,0 +1,22 @@
+# Docker & local env
+.env
+.env.local
+
+# Dependencies
+node_modules
+
+# Next.js
+.next
+out
+
+# Testing
+playwright-report
+test-results
+
+# Misc
+.DS_Store
+*.pem
+npm-debug.log*
+
+# Prisma generated (re-generated in CI/Docker)
+src/generated
