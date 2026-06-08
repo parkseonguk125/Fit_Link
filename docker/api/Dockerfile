@@ -2,7 +2,7 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install --ignore-scripts
 
 FROM node:20-alpine AS builder
 WORKDIR /app
@@ -31,7 +31,7 @@ COPY --from=builder /app/src/generated ./src/generated
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-COPY docker/entrypoint.sh /entrypoint.sh
+COPY docker/api/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 USER nextjs

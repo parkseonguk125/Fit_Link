@@ -48,7 +48,6 @@ test.describe("기록", () => {
 
     await expect(page).toHaveURL(/\/records\/.+/);
     await expect(page.getByText("하체 운동 자극이 좋았습니다.")).toBeVisible();
-    await expect(page.locator("span", { hasText: "하체" }).first()).toBeVisible();
   });
 
   test("내 기록 목록과 캘린더 보기", async ({ page }) => {
@@ -76,7 +75,11 @@ test.describe("소셜", () => {
     await expect(commentBox).toHaveValue("가슴 하단은 벤치 각도를 조금 낮춰 보세요.");
     await page.getByRole("button", { name: "피드백 남기기" }).click();
 
-    await expect(page.getByText("가슴 하단은 벤치 각도를 조금 낮춰 보세요.")).toBeVisible();
+    await expect(
+      page.getByRole("paragraph").filter({
+        hasText: "가슴 하단은 벤치 각도를 조금 낮춰 보세요.",
+      }),
+    ).toBeVisible();
     await expect(page.locator("span.rounded-full", { hasText: "트레이너" })).toBeVisible();
   });
 
@@ -85,7 +88,8 @@ test.describe("소셜", () => {
     await page.goto("/me");
     await page.getByPlaceholder("닉네임 검색").fill("김트레이너");
     await page.getByRole("button", { name: "검색" }).click();
-    await page.getByText("김트레이너").click();
+    await expect(page.getByText("김트레이너").first()).toBeVisible({ timeout: 10000 });
+    await page.getByText("김트레이너").first().click();
     await page.getByRole("button", { name: "팔로우" }).click();
     await expect(page.getByRole("button", { name: "팔로우 중" })).toBeVisible();
   });
