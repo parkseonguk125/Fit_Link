@@ -1,6 +1,8 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    build:
+      context: ./docker/postgres
+    image: exercise_log_postgres:local
     container_name: exercise_log_db
     restart: unless-stopped
     environment:
@@ -15,61 +17,30 @@ services:
       test: ["CMD-SHELL", "pg_isready -U exercise -d exercise_log"]
       interval: 5s
       timeout: 5s
-      retries: 10
-
-  minio:
-    image: minio/minio:latest
-    container_name: exercise_log_minio
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio_data:/data
-
-  minio-init:
-    image: minio/mc:latest
-    container_name: exercise_log_minio_init
-    depends_on:
-      minio:
-        condition: service_started
-    entrypoint: >
-      /bin/sh -c "
-      sleep 3;
-      mc alias set local http://minio:9000 minioadmin minioadmin;
-      mc mb local/record-images --ignore-existing;
-      mc anonymous set download local/record-images;
-      exit 0;
-      "
+      retries: 15
+      start_period: 20s
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
+    image: exercise_log_app:local
     container_name: exercise_log_app
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
-      minio-init:
-        condition: service_completed_successfully
     ports:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://exercise:exercise@postgres:5432/exercise_log?schema=public
       AUTH_SECRET: docker-dev-secret-change-in-production
       AUTH_URL: http://localhost:3000
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_PUBLIC_URL: http://localhost:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-      MINIO_BUCKET: record-images
+      UPLOAD_DIR: /app/uploads
       NODE_ENV: production
+    volumes:
+      - uploads_data:/app/uploads
 
 volumes:
   postgres_data:
-  minio_data:
+  uploads_data:

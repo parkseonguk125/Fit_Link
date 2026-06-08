@@ -10,7 +10,7 @@ export default defineConfig({
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",
-    ...devices["iPhone 13"],
+    ...devices["Pixel 5"],
   },
   webServer: {
     command: "npm run dev",

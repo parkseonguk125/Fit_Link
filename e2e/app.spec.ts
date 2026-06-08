@@ -20,9 +20,9 @@ test.describe("인증", () => {
   });
 });
 
-async function login(page: import("@playwright/test").Page) {
+async function login(page: import("@playwright/test").Page, email: string) {
   await page.goto("/login");
-  await page.getByPlaceholder("이메일").fill("user@test.com");
+  await page.getByPlaceholder("이메일").fill(email);
   await page.getByPlaceholder("비밀번호").fill(password);
   await page.getByRole("button", { name: "로그인" }).click();
   await expect(page).toHaveURL(/\/feed$/);
@@ -30,7 +30,7 @@ async function login(page: import("@playwright/test").Page) {
 
 test.describe("기록", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
+    await login(page, "user@test.com");
   });
 
   test("운동 기록 작성 및 상세 확인", async ({ page }) => {
@@ -48,51 +48,40 @@ test.describe("기록", () => {
 
     await expect(page).toHaveURL(/\/records\/.+/);
     await expect(page.getByText("하체 운동 자극이 좋았습니다.")).toBeVisible();
-    await expect(page.getByText("하체")).toBeVisible();
+    await expect(page.locator("span", { hasText: "하체" }).first()).toBeVisible();
   });
 
   test("내 기록 목록과 캘린더 보기", async ({ page }) => {
     await page.goto("/me/records");
     await expect(page.getByRole("heading", { name: "내 기록" })).toBeVisible();
     await page.getByRole("link", { name: "캘린더" }).click();
-    await expect(page.getByText("년")).toBeVisible();
+    await expect(page.locator("p.font-semibold").filter({ hasText: /년.*월/ })).toBeVisible();
   });
 });
 
 test.describe("소셜", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page);
-  });
-
   test("피드에서 공개 기록 확인", async ({ page }) => {
-    await page.goto("/login");
-    await page.getByPlaceholder("이메일").fill("trainer@test.com");
-    await page.getByPlaceholder("비밀번호").fill(password);
-    await page.getByRole("button", { name: "로그인" }).click();
-    await expect(page).toHaveURL(/\/feed$/);
-
+    await login(page, "trainer@test.com");
     await expect(page.getByText("운동러").first()).toBeVisible();
     await expect(page.getByText("가슴").first()).toBeVisible();
   });
 
   test("트레이너 피드백 댓글 작성", async ({ page }) => {
-    await page.goto("/login");
-    await page.getByPlaceholder("이메일").fill("trainer@test.com");
-    await page.getByPlaceholder("비밀번호").fill(password);
-    await page.getByRole("button", { name: "로그인" }).click();
-    await expect(page).toHaveURL(/\/feed$/);
-
+    await login(page, "trainer@test.com");
     await page.getByText("운동러").first().click();
-    await page
-      .getByPlaceholder("피드백이나 조언을 남겨 주세요")
-      .fill("가슴 하단은 벤치 각도를 조금 낮춰 보세요.");
+    await expect(page.getByRole("heading", { name: "기록 상세" })).toBeVisible();
+
+    const commentBox = page.getByPlaceholder("피드백이나 조언을 남겨 주세요");
+    await commentBox.fill("가슴 하단은 벤치 각도를 조금 낮춰 보세요.");
+    await expect(commentBox).toHaveValue("가슴 하단은 벤치 각도를 조금 낮춰 보세요.");
     await page.getByRole("button", { name: "피드백 남기기" }).click();
 
     await expect(page.getByText("가슴 하단은 벤치 각도를 조금 낮춰 보세요.")).toBeVisible();
-    await expect(page.getByText("트레이너")).toBeVisible();
+    await expect(page.locator("span.rounded-full", { hasText: "트레이너" })).toBeVisible();
   });
 
   test("사용자 검색 및 팔로우", async ({ page }) => {
+    await login(page, "user@test.com");
     await page.goto("/me");
     await page.getByPlaceholder("닉네임 검색").fill("김트레이너");
     await page.getByRole("button", { name: "검색" }).click();

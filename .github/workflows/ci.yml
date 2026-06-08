@@ -20,8 +20,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Start Docker services
-        run: docker compose up -d postgres minio minio-init
+      - name: Build PostgreSQL image and start container
+        run: docker compose up -d postgres
 
       - name: Wait for PostgreSQL
         run: |
@@ -47,11 +47,7 @@ jobs:
           DATABASE_URL: postgresql://exercise:exercise@localhost:5432/exercise_log?schema=public
           AUTH_SECRET: ci-test-secret
           AUTH_URL: http://localhost:3000
-          MINIO_ENDPOINT: http://localhost:9000
-          MINIO_PUBLIC_URL: http://localhost:9000
-          MINIO_ACCESS_KEY: minioadmin
-          MINIO_SECRET_KEY: minioadmin
-          MINIO_BUCKET: record-images
+          UPLOAD_DIR: ./uploads
           CI: true
 
       - name: Build app
@@ -60,8 +56,4 @@ jobs:
           DATABASE_URL: postgresql://exercise:exercise@localhost:5432/exercise_log?schema=public
           AUTH_SECRET: ci-test-secret
           AUTH_URL: http://localhost:3000
-          MINIO_ENDPOINT: http://localhost:9000
-          MINIO_PUBLIC_URL: http://localhost:9000
-          MINIO_ACCESS_KEY: minioadmin
-          MINIO_SECRET_KEY: minioadmin
-          MINIO_BUCKET: record-images
+          UPLOAD_DIR: ./uploads

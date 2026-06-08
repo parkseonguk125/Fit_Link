@@ -10,8 +10,10 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# Testing
 /coverage
+/playwright-report
+/test-results
 
 # next.js
 /.next/
@@ -43,4 +45,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+/uploads
 /src/generated/prisma

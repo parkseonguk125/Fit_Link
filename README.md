@@ -1,11 +1,11 @@
-# 운동·식단 기록 (Docker 로컬 개발)
+# Fit Link — 운동·식단 기록 (Docker 로컬 개발)
 
-모바일 최적화 운동·유산소·식단 기록 웹앱입니다. PostgreSQL, MinIO(이미지), NextAuth(로그인)를 **Docker**로 실행합니다.
+모바일 최적화 운동·유산소·식단 기록 웹앱입니다. PostgreSQL은 **Docker**로 실행하고, 사진은 로컬 볼륨(`uploads/`)에 저장합니다.
 
 ## 기능
 
 - 식단 / 운동 / 유산소 기록 (운동 부위별 분류)
-- 사진 업로드 (MinIO), 유튜브 URL 임베드
+- 사진 업로드, 유튜브 URL 임베드
 - 4종 메모 (느낀 점, 힘든 점, 부족한 점, 알고 싶은 점)
 - 공개 범위: 나만 / 팔로워만 / 전체 공개
 - 피드, 팔로우, 댓글 피드백, 트레이너 배지
@@ -16,9 +16,9 @@
 | 구분 | 기술 |
 |------|------|
 | 앱 | Next.js 16, TypeScript, Tailwind CSS |
-| DB | PostgreSQL (Docker) |
+| DB | PostgreSQL (Docker, Alpine 기반 자체 이미지) |
 | 로그인 | NextAuth (Credentials) |
-| 파일 | MinIO (Docker, S3 호환) |
+| 파일 | 로컬 파일 저장 (`uploads/`, Docker volume) |
 | ORM | Prisma |
 | 테스트 | Playwright |
 
@@ -37,11 +37,11 @@ npm install
 npm run docker:infra
 ```
 
-PostgreSQL(`localhost:5432`)과 MinIO(`localhost:9000`)가 실행됩니다.
+PostgreSQL(`localhost:5432`)이 실행됩니다. Docker Hub pull 없이 **로컬 Alpine 이미지**로 PostgreSQL을 빌드합니다.
 
 ### 1-2. 환경 변수
 
-`.env.example`을 참고해 `.env` 파일이 있는지 확인하세요. (기본값으로 로컬 Docker에 연결됩니다)
+`.env.example`을 참고해 `.env` 파일이 있는지 확인하세요.
 
 ### 1-3. DB 마이그레이션 & 시드
 
@@ -80,11 +80,9 @@ docker compose up -d --build
 ```
 
 - 앱: http://localhost:3000
-- MinIO 콘솔: http://localhost:9001 (minioadmin / minioadmin)
+- DB: PostgreSQL (Docker 내부)
 
 ## 3. Playwright E2E 테스트
-
-인프라와 DB 시드가 준비된 상태에서:
 
 ```bash
 npm run setup:local
@@ -92,48 +90,13 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-## 4. GitHub 업로드
+## 4. GitHub 저장소
 
-### 4-1. GitHub에서 새 저장소 생성
-
-1. https://github.com/new 접속
-2. Repository name: `exercise_log` (원하는 이름)
-3. **Public** 또는 Private 선택
-4. README, .gitignore 추가 **하지 않음** (로컬에 이미 있음)
-5. Create repository
-
-### 4-2. 로컬에서 push
+원격 저장소: https://github.com/parkseonguk125/Fit_Link.git
 
 ```bash
-git add .
-git commit -m "feat: Docker 기반 모바일 운동·식단 기록 웹앱"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/exercise_log.git
+git remote add origin https://github.com/parkseonguk125/Fit_Link.git
 git push -u origin main
-```
-
-`YOUR_USERNAME`을 본인 GitHub 아이디로 바꿔 주세요.
-
-### 4-3. SSH 사용 시
-
-```bash
-git remote add origin git@github.com:YOUR_USERNAME/exercise_log.git
-git push -u origin main
-```
-
-## 프로젝트 구조
-
-```
-exercise_log/
-├── docker-compose.yml    # PostgreSQL + MinIO + App
-├── Dockerfile
-├── prisma/               # DB 스키마, 시드
-├── src/
-│   ├── app/              # 페이지 & API
-│   ├── components/       # UI 컴포넌트
-│   └── lib/              # DB, Storage, Actions
-├── e2e/                  # Playwright 테스트
-└── public/manifest.json  # PWA
 ```
 
 ## 환경 변수
@@ -143,10 +106,10 @@ exercise_log/
 | DATABASE_URL | PostgreSQL 연결 문자열 |
 | AUTH_SECRET | NextAuth 시크릿 |
 | AUTH_URL | 앱 URL |
-| MINIO_* | MinIO 접속 정보 |
+| UPLOAD_DIR | 업로드 파일 저장 경로 (기본 `./uploads`) |
 
 ## 주의사항
 
 - `.env` 파일은 Git에 올리지 마세요.
-- 배포(Vercel 등)는 이 README 범위 밖입니다. Docker 로컬 + GitHub 업로드까지 포함합니다.
-- MinIO 버킷 `record-images`는 `docker:infra` 실행 시 자동 생성됩니다.
+- `uploads/` 폴더도 Git에 포함되지 않습니다.
+- Docker Hub 네트워크 문제 시에도 `docker compose build postgres`로 DB를 로컬 빌드할 수 있습니다.

@@ -1,39 +1,31 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { mkdir, writeFile } from "fs/promises";
+import path from "path";
 
-const endpoint = process.env.MINIO_ENDPOINT ?? "http://localhost:9000";
-const accessKeyId = process.env.MINIO_ACCESS_KEY ?? "minioadmin";
-const secretAccessKey = process.env.MINIO_SECRET_KEY ?? "minioadmin";
-const bucket = process.env.MINIO_BUCKET ?? "record-images";
-const publicUrl = process.env.MINIO_PUBLIC_URL ?? "http://localhost:9000";
+const uploadRoot = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
 
-export const minioBucket = bucket;
-export const minioPublicUrl = publicUrl;
-
-export const s3Client = new S3Client({
-  endpoint,
-  region: "us-east-1",
-  credentials: { accessKeyId, secretAccessKey },
-  forcePathStyle: true,
-});
+function sanitizeFilename(filename: string): string {
+  return filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+}
 
 export async function uploadImage(
   file: Buffer,
   filename: string,
-  contentType: string,
 ): Promise<{ url: string; storagePath: string }> {
-  const storagePath = `uploads/${Date.now()}-${filename}`;
+  const storagePath = `${Date.now()}-${sanitizeFilename(filename)}`;
+  const absolutePath = path.join(uploadRoot, storagePath);
 
-  await s3Client.send(
-    new PutObjectCommand({
-      Bucket: bucket,
-      Key: storagePath,
-      Body: file,
-      ContentType: contentType,
-    }),
-  );
+  await mkdir(uploadRoot, { recursive: true });
+  await writeFile(absolutePath, file);
 
   return {
     storagePath,
-    url: `${publicUrl}/${bucket}/${storagePath}`,
+    url: `/api/files/${storagePath}`,
   };
 }
+
+export function getUploadPath(storagePath: string): string {
+  const safePath = path.basename(storagePath);
+  return path.join(uploadRoot, safePath);
+}
+
+export { uploadRoot };

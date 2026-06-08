@@ -19,7 +19,7 @@ export default auth((request) => {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/api/auth")) {
+  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/files")) {
     return NextResponse.next();
   }
 

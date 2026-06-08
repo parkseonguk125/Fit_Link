@@ -23,13 +23,14 @@ export type RecordCardData = {
 };
 
 export function RecordCard({ record }: { record: RecordCardData }) {
+  const firstMedia = record.media[0];
   const preview =
     record.feltNote ||
-    record.media.length > 0
-      ? record.media[0].mediaType === "IMAGE"
+    (firstMedia
+      ? firstMedia.mediaType === "IMAGE"
         ? "사진이 포함된 기록"
         : "영상이 포함된 기록"
-      : "메모 없음";
+      : "메모 없음");
 
   const image = record.media.find((item) => item.mediaType === "IMAGE");
 
