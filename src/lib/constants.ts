@@ -1,4 +1,4 @@
-import type { Category, ExercisePart, Role, Visibility } from "@/generated/prisma/client";
+import type { CardioType, Category, ExercisePart, Role, Visibility } from "@/generated/prisma/client";
 
 export const CATEGORY_OPTIONS: { value: Category; label: string }[] = [
   { value: "DIET", label: "식단" },
@@ -13,6 +13,26 @@ export const EXERCISE_PART_OPTIONS: { value: ExercisePart; label: string }[] = [
   { value: "LEGS", label: "하체" },
   { value: "ARMS", label: "팔" },
   { value: "CORE", label: "코어" },
+  { value: "OTHER", label: "기타" },
+];
+
+export const CARDIO_TYPE_OPTIONS: { value: CardioType; label: string }[] = [
+  { value: "RUNNING", label: "러닝" },
+  { value: "CYCLING", label: "사이클" },
+  { value: "WALKING", label: "걷기" },
+  { value: "SWIMMING", label: "수영" },
+  { value: "HIIT", label: "HIIT" },
+  { value: "ROWING", label: "로잉" },
+  { value: "ELLIPTICAL", label: "일립티컬" },
+  { value: "JUMP_ROPE", label: "줄넘기" },
+  { value: "TRACKING", label: "트래킹" },
+  { value: "HIKING", label: "등산" },
+  { value: "SPINNING", label: "스피닝" },
+  { value: "AEROBICS", label: "에어로빅" },
+  { value: "ZUMBA", label: "줌바댄스" },
+  { value: "BROADCAST_DANCE", label: "방송댄스" },
+  { value: "SPORTS_DANCE", label: "스포츠댄스" },
+  { value: "STAIRMASTER", label: "천국의 계단" },
   { value: "OTHER", label: "기타" },
 ];
 
@@ -34,6 +54,11 @@ export function categoryLabel(category: Category): string {
 export function exercisePartLabel(part: ExercisePart | null | undefined): string {
   if (!part) return "";
   return EXERCISE_PART_OPTIONS.find((item) => item.value === part)?.label ?? part;
+}
+
+export function cardioTypeLabel(type: CardioType | null | undefined): string {
+  if (!type) return "";
+  return CARDIO_TYPE_OPTIONS.find((item) => item.value === type)?.label ?? type;
 }
 
 export function visibilityLabel(visibility: Visibility): string {

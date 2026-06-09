@@ -12,7 +12,7 @@ services:
       POSTGRES_PASSWORD: exercise
       POSTGRES_DB: exercise_log
     ports:
-      - "5432:5432"
+      - "0.0.0.0:5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -33,11 +33,11 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "3001:3000"
+      - "0.0.0.0:3002:3000"
     environment:
       DATABASE_URL: postgresql://exercise:exercise@db:5432/exercise_log?schema=public
       AUTH_SECRET: docker-dev-secret-change-in-production
-      AUTH_URL: http://localhost:8081
+      AUTH_TRUST_HOST: "true"
       UPLOAD_DIR: /app/uploads
       NODE_ENV: production
     volumes:
@@ -52,7 +52,7 @@ services:
     depends_on:
       - api
     ports:
-      - "8081:80"
+      - "0.0.0.0:8082:80"
 
 volumes:
   postgres_data:

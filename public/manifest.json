@@ -2,7 +2,7 @@
   "name": "운동·식단 기록",
   "short_name": "운동기록",
   "description": "모바일 운동·식단 기록 및 피드백 공유",
-  "start_url": "/feed",
+  "start_url": "/me/records",
   "display": "standalone",
   "background_color": "#F8F9FA",
   "theme_color": "#4A90A4",

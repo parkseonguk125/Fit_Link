@@ -1,24 +1,62 @@
+import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { ProfileForm } from "@/components/ProfileForm";
-import { UserSearch } from "@/components/UserSearch";
+import { TrainerProfileSummary } from "@/components/TrainerProfileSummary";
 import { UserBadge } from "@/components/UserBadge";
 import { auth } from "@/auth";
+import {
+  getFriendUserIds,
+  getPendingFollowRequestCount,
+  hasUnreadFriendRequests,
+} from "@/lib/follow";
 import { prisma } from "@/lib/prisma";
+
+function ProfileStatCard({
+  href,
+  value,
+  label,
+  showBadge = false,
+}: {
+  href: string;
+  value: number;
+  label: string;
+  showBadge?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className="relative rounded-lg bg-gray-50 p-3 transition hover:bg-gray-100 active:scale-[0.98]"
+    >
+      {showBadge ? (
+        <span
+          aria-label="새 친구 요청"
+          className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500"
+        />
+      ) : null}
+      <p className="font-semibold text-gray-900">{value}</p>
+      <p className="text-xs text-gray-500">{label}</p>
+    </Link>
+  );
+}
 
 export default async function ProfilePage() {
   const session = await auth();
-  const user = await prisma.user.findUnique({
-    where: { id: session!.user!.id },
-    include: {
-      _count: {
-        select: {
-          records: true,
-          followers: true,
-          following: true,
+  const userId = session!.user!.id;
+
+  const [user, friendCount, friendRequestCount, unreadFriendRequests] =
+    await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        _count: {
+          select: { records: true },
         },
       },
-    },
-  });
+    }),
+    getFriendUserIds(userId).then((ids) => ids.length),
+    getPendingFollowRequestCount(userId),
+    hasUnreadFriendRequests(userId),
+  ]);
 
   if (!user) {
     return null;
@@ -35,19 +73,33 @@ export default async function ProfilePage() {
             <UserBadge role={user.role} />
           </div>
           <p className="mt-1 text-sm text-gray-500">{user.email}</p>
+          {user.role === "TRAINER" ? (
+            <TrainerProfileSummary
+              profile={{
+                trainerRegion: user.trainerRegion,
+                trainerGymName: user.trainerGymName,
+                trainerPosition: user.trainerPosition,
+                trainerCareer: user.trainerCareer,
+              }}
+            />
+          ) : null}
           <div className="mt-4 grid grid-cols-3 gap-2 text-center text-sm">
-            <div className="rounded-lg bg-gray-50 p-3">
-              <p className="font-semibold text-gray-900">{user._count.records}</p>
-              <p className="text-xs text-gray-500">기록</p>
-            </div>
-            <div className="rounded-lg bg-gray-50 p-3">
-              <p className="font-semibold text-gray-900">{user._count.followers}</p>
-              <p className="text-xs text-gray-500">팔로워</p>
-            </div>
-            <div className="rounded-lg bg-gray-50 p-3">
-              <p className="font-semibold text-gray-900">{user._count.following}</p>
-              <p className="text-xs text-gray-500">팔로우</p>
-            </div>
+            <ProfileStatCard
+              href="/me/records"
+              value={user._count.records}
+              label="기록"
+            />
+            <ProfileStatCard
+              href="/following"
+              value={friendCount}
+              label="친구"
+            />
+            <ProfileStatCard
+              href="/following/requests"
+              value={friendRequestCount}
+              label="친구요청"
+              showBadge={unreadFriendRequests}
+            />
           </div>
         </div>
 
@@ -55,9 +107,13 @@ export default async function ProfilePage() {
           initialDisplayName={user.displayName}
           initialBio={user.bio}
           initialRole={user.role}
+          initialTrainerProfile={{
+            trainerRegion: user.trainerRegion,
+            trainerGymName: user.trainerGymName,
+            trainerPosition: user.trainerPosition,
+            trainerCareer: user.trainerCareer,
+          }}
         />
-
-        <UserSearch />
       </div>
     </MobileShell>
   );

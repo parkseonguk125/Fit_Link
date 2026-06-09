@@ -9,6 +9,9 @@ const mimeTypes: Record<string, string> = {
   ".png": "image/png",
   ".gif": "image/gif",
   ".webp": "image/webp",
+  ".heic": "image/heic",
+  ".heif": "image/heif",
+  ".avif": "image/avif",
 };
 
 export async function GET(
@@ -21,10 +24,12 @@ export async function GET(
     const filePath = getUploadPath(filename);
     const buffer = await readFile(filePath);
     const extension = path.extname(filename).toLowerCase();
+    const contentType = mimeTypes[extension] ?? "application/octet-stream";
 
     return new NextResponse(buffer, {
       headers: {
-        "Content-Type": mimeTypes[extension] ?? "application/octet-stream",
+        "Content-Type": contentType,
+        "Content-Disposition": `inline; filename="${filename}"`,
         "Cache-Control": "public, max-age=86400",
       },
     });

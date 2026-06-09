@@ -23,3 +23,8 @@ textarea,
 button {
   font: inherit;
 }
+
+button {
+  appearance: none;
+  -webkit-appearance: none;
+}

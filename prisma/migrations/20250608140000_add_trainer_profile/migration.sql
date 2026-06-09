@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN "trainerRegion" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "User" ADD COLUMN "trainerGymName" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "User" ADD COLUMN "trainerPosition" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "User" ADD COLUMN "trainerCareer" TEXT NOT NULL DEFAULT '';

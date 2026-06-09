@@ -26,7 +26,7 @@ jobs:
       - name: Wait for web
         run: |
           for i in {1..60}; do
-            curl -sf http://localhost:8081/login && exit 0
+            curl -sf http://localhost:8082/login && exit 0
             sleep 3
           done
           exit 1
@@ -37,9 +37,9 @@ jobs:
       - name: Run E2E tests against Docker web
         run: npm run test:e2e
         env:
-          DATABASE_URL: postgresql://exercise:exercise@localhost:5432/exercise_log?schema=public
+          DATABASE_URL: postgresql://exercise:exercise@localhost:5433/exercise_log?schema=public
           AUTH_SECRET: ci-test-secret
-          AUTH_URL: http://localhost:8081
+          AUTH_URL: http://localhost:8082
           UPLOAD_DIR: ./uploads
-          PLAYWRIGHT_BASE_URL: http://localhost:8081
+          PLAYWRIGHT_BASE_URL: http://localhost:8082
           CI: true

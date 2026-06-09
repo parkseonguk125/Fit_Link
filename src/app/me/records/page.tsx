@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
-import { RecordCard } from "@/components/RecordCard";
-import { CalendarView } from "@/components/CalendarView";
+import { MyRecordsClient } from "@/components/MyRecordsClient";
 import { EmptyState } from "@/components/EmptyState";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -12,6 +11,8 @@ import {
   exercisePartLabel,
 } from "@/lib/constants";
 import type { Category, ExercisePart } from "@/generated/prisma/client";
+
+export const dynamic = "force-dynamic";
 
 export default async function MyRecordsPage({
   searchParams,
@@ -39,6 +40,35 @@ export default async function MyRecordsPage({
       media: {
         orderBy: { sortOrder: "asc" },
         select: { id: true, mediaType: true, url: true },
+      },
+      dietItems: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          foodName: true,
+          matchedName: true,
+          servingLabel: true,
+          caloriesPerServing: true,
+          servings: true,
+          totalCalories: true,
+        },
+      },
+      exerciseEntries: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          exerciseKey: true,
+          exerciseName: true,
+          sets: {
+            orderBy: { setNumber: "asc" },
+            select: {
+              id: true,
+              setNumber: true,
+              weightKg: true,
+              reps: true,
+            },
+          },
+        },
       },
       _count: { select: { comments: true } },
     },
@@ -68,7 +98,7 @@ export default async function MyRecordsPage({
         <div className="flex gap-2">
           <Link
             href={buildHref({ view: "list", category: undefined, part: undefined })}
-            className={`min-h-10 flex-1 rounded-xl text-sm leading-10 ${
+            className={`min-h-9 flex-1 rounded-lg text-xs leading-9 ${
               view === "list"
                 ? "bg-[#4A90A4] text-white"
                 : "bg-white text-gray-700 ring-1 ring-gray-200"
@@ -78,7 +108,7 @@ export default async function MyRecordsPage({
           </Link>
           <Link
             href={buildHref({ view: "calendar" })}
-            className={`min-h-10 flex-1 rounded-xl text-sm leading-10 ${
+            className={`min-h-9 flex-1 rounded-lg text-xs leading-9 ${
               view === "calendar"
                 ? "bg-[#4A90A4] text-white"
                 : "bg-white text-gray-700 ring-1 ring-gray-200"
@@ -91,7 +121,7 @@ export default async function MyRecordsPage({
         <div className="flex flex-wrap gap-2">
           <Link
             href={buildHref({ category: undefined, part: undefined })}
-            className={`rounded-full px-3 py-2 text-xs ${
+            className={`rounded-full px-2.5 py-1.5 text-xs ${
               !params.category
                 ? "bg-[#4A90A4] text-white"
                 : "bg-white text-gray-700 ring-1 ring-gray-200"
@@ -106,7 +136,7 @@ export default async function MyRecordsPage({
                 category: option.value,
                 part: option.value === "EXERCISE" ? params.part : undefined,
               })}
-              className={`rounded-full px-3 py-2 text-xs ${
+              className={`rounded-full px-2.5 py-1.5 text-xs ${
                 params.category === option.value
                   ? "bg-[#4A90A4] text-white"
                   : "bg-white text-gray-700 ring-1 ring-gray-200"
@@ -123,7 +153,7 @@ export default async function MyRecordsPage({
               <Link
                 key={option.value}
                 href={buildHref({ part: option.value })}
-                className={`rounded-full px-3 py-2 text-xs ${
+                className={`rounded-full px-2.5 py-1.5 text-xs ${
                   params.part === option.value
                     ? "bg-gray-800 text-white"
                     : "bg-white text-gray-700 ring-1 ring-gray-200"
@@ -135,19 +165,16 @@ export default async function MyRecordsPage({
           </div>
         ) : null}
 
-        {records.length === 0 ? (
+        {records.length === 0 && view !== "calendar" ? (
           <EmptyState
             title="아직 기록이 없어요"
             description="기록 탭에서 첫 운동·식단 기록을 남겨 보세요."
           />
-        ) : view === "calendar" ? (
-          <CalendarView records={records} />
         ) : (
-          <div className="space-y-3">
-            {records.map((record) => (
-              <RecordCard key={record.id} record={record} />
-            ))}
-          </div>
+          <MyRecordsClient
+            records={records}
+            view={view === "calendar" ? "calendar" : "list"}
+          />
         )}
       </div>
     </MobileShell>

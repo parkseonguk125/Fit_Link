@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import {
+  DISPLAY_NAME_DUPLICATE_ERROR,
+  isDisplayNameTaken,
+} from "@/lib/display-name";
 import { prisma } from "@/lib/prisma";
+import { parseTrainerProfile } from "@/lib/trainer-profile";
 import type { Role } from "@/generated/prisma/client";
 
 export async function POST(request: Request) {
@@ -12,6 +17,8 @@ export async function POST(request: Request) {
     const password = String(body.password ?? "");
     const displayName = String(body.displayName ?? "").trim();
     const role = (body.role ?? "USER") as Role;
+    const isTrainer = role === "TRAINER";
+    const trainerProfile = parseTrainerProfile(body);
 
     if (!email || !password || !displayName) {
       return NextResponse.json(
@@ -35,6 +42,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (await isDisplayNameTaken(displayName)) {
+      return NextResponse.json(
+        { error: DISPLAY_NAME_DUPLICATE_ERROR },
+        { status: 409 },
+      );
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
 
     await prisma.user.create({
@@ -42,12 +56,28 @@ export async function POST(request: Request) {
         email,
         passwordHash,
         displayName,
-        role: role === "TRAINER" ? "TRAINER" : "USER",
+        role: isTrainer ? "TRAINER" : "USER",
+        trainerRegion: isTrainer ? trainerProfile.trainerRegion : "",
+        trainerGymName: isTrainer ? trainerProfile.trainerGymName : "",
+        trainerPosition: isTrainer ? trainerProfile.trainerPosition : "",
+        trainerCareer: isTrainer ? trainerProfile.trainerCareer : "",
       },
     });
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code: string }).code === "P2002"
+    ) {
+      return NextResponse.json(
+        { error: DISPLAY_NAME_DUPLICATE_ERROR },
+        { status: 409 },
+      );
+    }
+
     return NextResponse.json(
       { error: "회원가입 중 오류가 발생했습니다." },
       { status: 500 },

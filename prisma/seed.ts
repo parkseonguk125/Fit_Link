@@ -15,7 +15,11 @@ async function main() {
 
   const user = await prisma.user.upsert({
     where: { email: "user@test.com" },
-    update: {},
+    update: {
+      displayName: "운동러",
+      bio: "꾸준히 기록하는 중",
+      role: "USER",
+    },
     create: {
       email: "user@test.com",
       passwordHash,
@@ -27,7 +31,11 @@ async function main() {
 
   const trainer = await prisma.user.upsert({
     where: { email: "trainer@test.com" },
-    update: {},
+    update: {
+      displayName: "김트레이너",
+      bio: "자세 교정과 피드백을 드립니다",
+      role: "TRAINER",
+    },
     create: {
       email: "trainer@test.com",
       passwordHash,

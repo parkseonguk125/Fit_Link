@@ -2,10 +2,12 @@ import { notFound } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { RecordCard } from "@/components/RecordCard";
 import { FollowButton } from "@/components/FollowButton";
+import { TrainerProfileSummary } from "@/components/TrainerProfileSummary";
 import { UserBadge } from "@/components/UserBadge";
 import { EmptyState } from "@/components/EmptyState";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getFollowStateBetween, getFriendUserIds } from "@/lib/follow";
 
 export default async function UserProfilePage({
   params,
@@ -17,8 +19,21 @@ export default async function UserProfilePage({
 
   const user = await prisma.user.findUnique({
     where: { id },
-    include: {
-      _count: { select: { followers: true, following: true } },
+    select: {
+      id: true,
+      displayName: true,
+      bio: true,
+      role: true,
+      trainerRegion: true,
+      trainerGymName: true,
+      trainerPosition: true,
+      trainerCareer: true,
+      _count: {
+        select: {
+          followers: { where: { status: "ACCEPTED" } },
+          following: { where: { status: "ACCEPTED" } },
+        },
+      },
     },
   });
 
@@ -26,23 +41,17 @@ export default async function UserProfilePage({
     notFound();
   }
 
-  const following = session?.user?.id
-    ? await prisma.follow.findUnique({
-        where: {
-          followerId_followingId: {
-            followerId: session.user.id,
-            followingId: id,
-          },
-        },
-      })
-    : null;
+  const friendCount = (await getFriendUserIds(id)).length;
 
+  const followState = session?.user?.id
+    ? await getFollowStateBetween(session.user.id, id)
+    : "none";
   const viewerId = session?.user?.id;
   const isOwner = viewerId === id;
 
   const visibilityFilter = isOwner
     ? undefined
-    : following
+    : followState === "accepted"
       ? (["PUBLIC", "FOLLOWERS"] as const)
       : (["PUBLIC"] as const);
 
@@ -58,6 +67,35 @@ export default async function UserProfilePage({
       media: {
         orderBy: { sortOrder: "asc" },
         select: { id: true, mediaType: true, url: true },
+      },
+      dietItems: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          foodName: true,
+          matchedName: true,
+          servingLabel: true,
+          caloriesPerServing: true,
+          servings: true,
+          totalCalories: true,
+        },
+      },
+      exerciseEntries: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          exerciseKey: true,
+          exerciseName: true,
+          sets: {
+            orderBy: { setNumber: "asc" },
+            select: {
+              id: true,
+              setNumber: true,
+              weightKg: true,
+              reps: true,
+            },
+          },
+        },
       },
       _count: { select: { comments: true } },
     },
@@ -79,12 +117,22 @@ export default async function UserProfilePage({
               {user.bio ? (
                 <p className="mt-2 text-sm text-gray-600">{user.bio}</p>
               ) : null}
+              {user.role === "TRAINER" ? (
+                <TrainerProfileSummary
+                  profile={{
+                    trainerRegion: user.trainerRegion,
+                    trainerGymName: user.trainerGymName,
+                    trainerPosition: user.trainerPosition,
+                    trainerCareer: user.trainerCareer,
+                  }}
+                />
+              ) : null}
               <p className="mt-3 text-xs text-gray-500">
-                팔로워 {user._count.followers} · 팔로우 {user._count.following}
+                팔로워 {user._count.followers} · 친구 {friendCount}
               </p>
             </div>
             {session?.user?.id !== id ? (
-              <FollowButton userId={id} initialFollowing={!!following} />
+              <FollowButton userId={id} initialState={followState} />
             ) : null}
           </div>
         </div>

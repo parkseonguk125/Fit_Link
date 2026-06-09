@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import { authConfig } from "@/auth.config";
 import { NextResponse } from "next/server";
+import { DEFAULT_APP_PATH } from "@/lib/nav-tabs";
 
 const { auth } = NextAuth(authConfig);
 
@@ -19,7 +20,11 @@ export default auth((request) => {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/files")) {
+  if (
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/files") ||
+    pathname.startsWith("/api/users/check-display-name")
+  ) {
     return NextResponse.next();
   }
 
@@ -28,7 +33,7 @@ export default auth((request) => {
   }
 
   if (isLoggedIn && isAuthPage) {
-    return NextResponse.redirect(new URL("/feed", request.url));
+    return NextResponse.redirect(new URL(DEFAULT_APP_PATH, request.url));
   }
 
   return NextResponse.next();

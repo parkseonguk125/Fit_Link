@@ -15,7 +15,7 @@ RUN npm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
-RUN apk add --no-cache libc6-compat openssl
+RUN apk add --no-cache libc6-compat openssl su-exec
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
@@ -34,7 +34,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY docker/api/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0

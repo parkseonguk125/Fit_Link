@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const result = await uploadImage(buffer, file.name);
+    const result = await uploadImage(buffer, file.name, file.type);
 
     return NextResponse.json(result);
   } catch {

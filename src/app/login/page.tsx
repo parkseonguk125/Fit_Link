@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { PasswordInput } from "@/components/PasswordInput";
+import { DEFAULT_APP_PATH } from "@/lib/nav-tabs";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -28,7 +30,7 @@ export default function LoginPage() {
       return;
     }
 
-    window.location.href = "/feed";
+    window.location.href = DEFAULT_APP_PATH;
   }
 
   return (
@@ -45,13 +47,12 @@ export default function LoginPage() {
           required
           className="min-h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm outline-none focus:border-[#4A90A4]"
         />
-        <input
-          type="password"
+        <PasswordInput
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={setPassword}
           placeholder="비밀번호"
           required
-          className="min-h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm outline-none focus:border-[#4A90A4]"
+          name="password"
         />
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
         <button

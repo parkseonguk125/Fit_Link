@@ -1,18 +1,33 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toggleFollow } from "@/lib/actions";
+import type { FollowState } from "@/lib/follow";
 
 export function FollowButton({
   userId,
-  initialFollowing,
+  initialState,
+  compact = false,
 }: {
   userId: string;
-  initialFollowing: boolean;
+  initialState: FollowState;
+  compact?: boolean;
 }) {
   const router = useRouter();
+  const [state, setState] = useState<FollowState>(initialState);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setState(initialState);
+  }, [initialState]);
+
+  const label =
+    state === "accepted"
+      ? "친구"
+      : state === "pending"
+        ? "요청됨"
+        : "친구 추가";
 
   return (
     <button
@@ -21,16 +36,24 @@ export function FollowButton({
       onClick={() =>
         startTransition(async () => {
           await toggleFollow(userId);
+          setState((current) => {
+            if (current === "none") {
+              return "pending";
+            }
+            return "none";
+          });
           router.refresh();
         })
       }
-      className={`min-h-12 rounded-xl px-4 text-sm font-semibold ${
-        initialFollowing
-          ? "bg-gray-100 text-gray-700"
-          : "bg-[#4A90A4] text-white"
+      className={`shrink-0 rounded-xl text-sm font-semibold disabled:opacity-60 ${
+        compact ? "min-h-9 px-3" : "min-h-12 px-4"
+      } ${
+        state === "none"
+          ? "bg-[#4A90A4] text-white"
+          : "bg-gray-100 text-gray-700"
       }`}
     >
-      {initialFollowing ? "팔로우 중" : "팔로우"}
+      {label}
     </button>
   );
 }

@@ -1,5 +1,8 @@
+import { getFriendUserIds } from "@/lib/follow";
 import { prisma } from "@/lib/prisma";
 import type { Visibility } from "@/generated/prisma/client";
+
+export { getFollowingUserIds } from "@/lib/follow";
 
 export async function canViewRecord(
   record: { userId: string; visibility: Visibility },
@@ -18,12 +21,13 @@ export async function canViewRecord(
   }
 
   if (record.visibility === "FOLLOWERS") {
-    const follow = await prisma.follow.findUnique({
+    const follow = await prisma.follow.findFirst({
       where: {
-        followerId_followingId: {
-          followerId: viewerId,
-          followingId: record.userId,
-        },
+        status: "ACCEPTED",
+        OR: [
+          { followerId: viewerId, followingId: record.userId },
+          { followerId: record.userId, followingId: viewerId },
+        ],
       },
     });
     return !!follow;
@@ -33,12 +37,7 @@ export async function canViewRecord(
 }
 
 export async function getFeedRecordIds(viewerId: string): Promise<string[]> {
-  const following = await prisma.follow.findMany({
-    where: { followerId: viewerId },
-    select: { followingId: true },
-  });
-
-  const followingIds = following.map((item) => item.followingId);
+  const friendIds = await getFriendUserIds(viewerId);
 
   const records = await prisma.record.findMany({
     where: {
@@ -46,7 +45,7 @@ export async function getFeedRecordIds(viewerId: string): Promise<string[]> {
         { visibility: "PUBLIC" },
         {
           visibility: "FOLLOWERS",
-          userId: { in: followingIds },
+          userId: { in: friendIds },
         },
       ],
       NOT: { userId: viewerId },

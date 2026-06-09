@@ -28,6 +28,26 @@ enum ExercisePart {
   OTHER
 }
 
+enum CardioType {
+  RUNNING
+  CYCLING
+  WALKING
+  SWIMMING
+  HIIT
+  ROWING
+  ELLIPTICAL
+  JUMP_ROPE
+  TRACKING
+  HIKING
+  SPINNING
+  AEROBICS
+  ZUMBA
+  BROADCAST_DANCE
+  SPORTS_DANCE
+  STAIRMASTER
+  OTHER
+}
+
 enum Visibility {
   PRIVATE
   FOLLOWERS
@@ -37,6 +57,12 @@ enum Visibility {
 enum MediaType {
   IMAGE
   YOUTUBE
+  LINK
+}
+
+enum FollowStatus {
+  PENDING
+  ACCEPTED
 }
 
 model User {
@@ -46,6 +72,11 @@ model User {
   displayName  String
   bio          String    @default("")
   role         Role      @default(USER)
+  trainerRegion    String @default("")
+  trainerGymName   String @default("")
+  trainerPosition  String @default("")
+  trainerCareer    String @default("")
+  friendRequestsSeenAt DateTime?
   createdAt    DateTime  @default(now())
   records      Record[]
   comments     Comment[]
@@ -59,6 +90,12 @@ model Record {
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   category     Category
   exercisePart ExercisePart?
+  cardioType         CardioType?
+  cardioDurationHours Int?
+  cardioDurationMin  Int?
+  cardioDistanceKm   Float?
+  cardioCalories     Int?
+  cardioHeartRateBpm Int?
   recordDate   DateTime      @db.Date
   feltNote     String        @default("")
   hardNote     String        @default("")
@@ -68,9 +105,51 @@ model Record {
   createdAt    DateTime      @default(now())
   media        RecordMedia[]
   comments     Comment[]
+  dietItems    DietItem[]
+  exerciseEntries ExerciseEntry[]
 
   @@index([userId, recordDate])
   @@index([visibility, createdAt])
+}
+
+model DietItem {
+  id                 String @id @default(cuid())
+  recordId           String
+  record             Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  foodName           String
+  matchedName        String @default("")
+  servingLabel       String
+  caloriesPerServing Int
+  servings           Float  @default(1)
+  totalCalories      Int
+  sortOrder          Int    @default(0)
+
+  @@index([recordId, sortOrder])
+}
+
+model ExerciseEntry {
+  id           String        @id @default(cuid())
+  recordId     String
+  record       Record        @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  exerciseKey  String
+  exerciseName String
+  sortOrder    Int           @default(0)
+  sets         ExerciseSet[]
+
+  @@index([recordId, sortOrder])
+  @@index([exerciseKey])
+}
+
+model ExerciseSet {
+  id              String        @id @default(cuid())
+  exerciseEntryId String
+  exerciseEntry   ExerciseEntry @relation(fields: [exerciseEntryId], references: [id], onDelete: Cascade)
+  setNumber       Int
+  weightKg        Float?
+  reps            Int?
+  sortOrder       Int           @default(0)
+
+  @@index([exerciseEntryId, setNumber])
 }
 
 model RecordMedia {
@@ -97,10 +176,12 @@ model Comment {
 
 model Follow {
   followerId  String
-  follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  follower    User         @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
   followingId String
-  following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
+  following   User         @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+  status      FollowStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
 
   @@id([followerId, followingId])
+  @@index([followingId, status])
 }
