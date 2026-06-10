@@ -1,22 +1,7 @@
-import os from "node:os";
 import path from "node:path";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-
-function getLanIpv4() {
-  const nets = os.networkInterfaces();
-  const candidates = [];
-
-  for (const entries of Object.values(nets)) {
-    for (const net of entries ?? []) {
-      if (net.family !== "IPv4" || net.internal) continue;
-      candidates.push(net.address);
-    }
-  }
-
-  const preferred = candidates.find((ip) => ip.startsWith("192.168."));
-  return preferred ?? candidates.find((ip) => !ip.startsWith("172.")) ?? candidates[0];
-}
+import { getLanIpv4 } from "./network-utils.mjs";
 
 function ensureWindowsFirewallRule() {
   if (process.platform !== "win32") return;

@@ -47,3 +47,5 @@ next-env.d.ts
 
 /uploads
 /src/generated/prisma
+.tunnel.pid
+.tunnel-url

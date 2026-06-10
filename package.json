@@ -13,10 +13,13 @@
     "db:seed": "tsx prisma/seed.ts",
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d --build && node scripts/print-lan-url.mjs",
+    "docker:public": "docker compose up -d --build && node scripts/print-public-access.mjs",
     "docker:lan": "node scripts/print-lan-url.mjs",
+    "docker:public:url": "node scripts/print-external-url.mjs",
+    "docker:public:stop": "node scripts/stop-host-tunnel.mjs",
     "docker:firewall": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ensure-firewall.ps1",
     "docker:infra": "docker compose up -d db api web",
-    "docker:down": "docker compose down",
+    "docker:down": "node scripts/docker-down.mjs",
     "docker:restart": "docker compose down && docker compose up -d --build",
     "docker:logs": "docker compose logs -f web api db",
     "docker:db-only": "docker compose up -d db",
@@ -31,6 +34,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@vercel/blob": "^2.4.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^16.6.1",
     "leaflet": "^1.9.4",
@@ -43,6 +47,7 @@
     "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
+    "@achingbrain/nat-port-mapper": "^4.0.5",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
