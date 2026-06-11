@@ -28,3 +28,61 @@ button {
   appearance: none;
   -webkit-appearance: none;
 }
+
+/* 클릭/탭 피드백 — 버튼·링크 공통 */
+@layer base {
+  button:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="button"]:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition:
+      transform 0.12s ease,
+      filter 0.12s ease,
+      opacity 0.12s ease,
+      background-color 0.12s ease;
+  }
+
+  button:not(:disabled):active,
+  input[type="submit"]:not(:disabled):active,
+  input[type="button"]:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active {
+    transform: scale(0.97);
+    filter: brightness(0.93);
+  }
+
+  button.absolute.inset-0:active {
+    transform: none;
+    filter: none;
+    opacity: 0.85;
+  }
+
+  a[href] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition:
+      transform 0.12s ease,
+      filter 0.12s ease,
+      opacity 0.12s ease,
+      background-color 0.12s ease;
+  }
+
+  a[href]:active {
+    opacity: 0.82;
+  }
+
+  a.rounded-xl:active,
+  a.rounded-lg:active,
+  a.rounded-full:active {
+    opacity: 1;
+    transform: scale(0.96);
+    filter: brightness(0.93);
+  }
+
+  nav.fixed a[href]:active {
+    opacity: 0.65;
+    transform: scale(0.9);
+    filter: none;
+  }
+}
