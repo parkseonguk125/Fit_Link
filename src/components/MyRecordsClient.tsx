@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { RecordCardData } from "@/components/RecordCard";
 import { RecordCard } from "@/components/RecordCard";
+import { CalendarDatePickerSheet } from "@/components/CalendarDatePickerSheet";
 import { deleteRecords } from "@/lib/actions";
 import { CHIP_BUTTON_CLASS } from "@/lib/ui-classes";
 
@@ -53,6 +54,7 @@ export function MyRecordsClient({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [current, setCurrent] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const showBulkDelete = view === "list";
 
@@ -62,6 +64,20 @@ export function MyRecordsClient({
       setSelectedIds(new Set());
     }
   }, [showBulkDelete]);
+
+  const pickerInitialDate = useMemo(() => {
+    if (selectedDate) {
+      return selectedDate;
+    }
+    const today = new Date();
+    if (
+      today.getFullYear() === current.getFullYear() &&
+      today.getMonth() === current.getMonth()
+    ) {
+      return today;
+    }
+    return new Date(current.getFullYear(), current.getMonth(), 1);
+  }, [selectedDate, current]);
 
   const days = useMemo(() => {
     const year = current.getFullYear();
@@ -216,9 +232,17 @@ export function MyRecordsClient({
             >
               이전
             </button>
-            <p className="text-sm font-semibold text-gray-900">
+            <button
+              type="button"
+              onClick={() => setDatePickerOpen(true)}
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold text-gray-900 transition hover:bg-gray-50 active:scale-[0.98]"
+              aria-label="년월일 선택"
+            >
               {current.getFullYear()}년 {current.getMonth() + 1}월
-            </p>
+              <span className="text-[10px] text-gray-500" aria-hidden>
+                ▼
+              </span>
+            </button>
             <button
               type="button"
               onClick={() =>
@@ -265,6 +289,17 @@ export function MyRecordsClient({
           </div>
         </div>
       ) : null}
+
+      <CalendarDatePickerSheet
+        open={datePickerOpen && view === "calendar"}
+        initialDate={pickerInitialDate}
+        onClose={() => setDatePickerOpen(false)}
+        onConfirm={(date) => {
+          setCurrent(new Date(date.getFullYear(), date.getMonth(), 1));
+          setSelectedDate(date);
+          setDatePickerOpen(false);
+        }}
+      />
 
       {view === "calendar" && records.length === 0 ? (
         <p className="text-center text-sm text-gray-500">

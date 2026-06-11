@@ -4,6 +4,8 @@ import {
   DISPLAY_NAME_DUPLICATE_ERROR,
   isDisplayNameTaken,
 } from "@/lib/display-name";
+import { assertSignupEmailVerified } from "@/lib/email-verification";
+import { isValidEmail } from "@/lib/form-validation";
 import { prisma } from "@/lib/prisma";
 import { parseTrainerProfile } from "@/lib/trainer-profile";
 import type { Role } from "@/generated/prisma/client";
@@ -27,9 +29,24 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!isValidEmail(email)) {
+      return NextResponse.json(
+        { error: "올바른 이메일 형식으로 입력해 주세요." },
+        { status: 400 },
+      );
+    }
+
     if (password.length < 6) {
       return NextResponse.json(
         { error: "비밀번호는 6자 이상이어야 합니다." },
+        { status: 400 },
+      );
+    }
+
+    const emailVerified = await assertSignupEmailVerified(email);
+    if (!emailVerified) {
+      return NextResponse.json(
+        { error: "이메일 인증을 완료해 주세요." },
         { status: 400 },
       );
     }
@@ -55,6 +72,7 @@ export async function POST(request: Request) {
       data: {
         email,
         passwordHash,
+        emailVerified: new Date(),
         displayName,
         role: isTrainer ? "TRAINER" : "USER",
         trainerRegion: isTrainer ? trainerProfile.trainerRegion : "",

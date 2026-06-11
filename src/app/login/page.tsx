@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { PasswordInput } from "@/components/PasswordInput";
+import { signInWithCredentials } from "@/lib/credentials-sign-in-client";
 import { DEFAULT_APP_PATH } from "@/lib/nav-tabs";
 
 export default function LoginPage() {
@@ -17,16 +17,12 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    const result = await signInWithCredentials(email, password, DEFAULT_APP_PATH);
 
     setLoading(false);
 
-    if (result?.error) {
-      setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+    if (!result.ok) {
+      setError(result.error ?? "이메일 또는 비밀번호가 올바르지 않습니다.");
       return;
     }
 
@@ -68,6 +64,13 @@ export default function LoginPage() {
         계정이 없으신가요?{" "}
         <Link href="/signup" className="font-medium text-[#4A90A4]">
           회원가입
+        </Link>
+      </p>
+
+      <p className="mt-3 text-center text-sm text-gray-600">
+        비밀번호를 잊어버리셨나요?{" "}
+        <Link href="/forgot-password" className="font-medium text-[#4A90A4]">
+          비밀번호 찾기
         </Link>
       </p>
     </div>

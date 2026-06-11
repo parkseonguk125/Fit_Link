@@ -7,6 +7,7 @@ import {
   searchUser,
   signup,
   uniqueEmail,
+  verifyEmailForSignup,
 } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -105,8 +106,10 @@ test.describe("회원 탈퇴", () => {
 
     await page.context().clearCookies();
     await page.goto("/signup", { waitUntil: "domcontentloaded" });
+    const reuseEmail = uniqueEmail("reuse");
     await page.getByPlaceholder("닉네임").fill(displayName);
-    await page.getByPlaceholder("이메일").fill(uniqueEmail("reuse"));
+    await page.getByPlaceholder("이메일").fill(reuseEmail);
+    await verifyEmailForSignup(page, reuseEmail);
     await page.getByPlaceholder("비밀번호 (6자 이상)").fill(PASSWORD);
 
     await expect(

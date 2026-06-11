@@ -6,6 +6,30 @@ export function uniqueEmail(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@e2e.test`;
 }
 
+export async function verifyEmailForSignup(page: Page, email: string) {
+  await page.getByRole("button", { name: "인증 코드 받기" }).click();
+
+  const sendResponse = await page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/auth/verify-email/send") &&
+      response.request().method() === "POST",
+  );
+  const sendData = (await sendResponse.json()) as { devCode?: string };
+  const code = sendData.devCode;
+
+  if (!code) {
+    throw new Error(
+      "E2E 테스트에는 AUTH_EMAIL_DEV_EXPOSE=true 환경 변수가 필요합니다.",
+    );
+  }
+
+  await page.getByPlaceholder("인증 코드 6자리").fill(code);
+  await page.getByRole("button", { name: "인증 확인" }).click();
+  await expect(page.getByText("이메일 인증 완료")).toBeVisible({
+    timeout: 10000,
+  });
+}
+
 export async function login(
   page: Page,
   email: string,
@@ -37,6 +61,7 @@ export async function signup(
   await page.goto("/signup");
   await page.getByPlaceholder("닉네임").fill(displayName);
   await page.getByPlaceholder("이메일").fill(email);
+  await verifyEmailForSignup(page, email);
   await page.getByPlaceholder("비밀번호 (6자 이상)").fill(password);
   await page.getByRole("button", { name: "회원가입" }).click();
   await expect(page).toHaveURL(/\/login$/);

@@ -15,7 +15,7 @@ function clearAuthCookies() {
 export async function signOutToLogin() {
   await signOut({ redirect: false });
   clearAuthCookies();
-  window.location.replace("/login");
+  window.location.replace("/");
 }
 
 export async function signOutAfterAccountDeletion() {

@@ -104,6 +104,58 @@ Vercel에서는 로컬 폴더 저장이 안 되므로 **Vercel Blob**을 사용�
 |------|----------------------|--------|---------------------------|
 | AUTH_TRUST_HOST | `true` | `true` | `true` 권장 |
 | AUTH_SECRET | (docker-compose) | 필수 | `.env` |
+| AUTH_EMAIL_DEV_EXPOSE | `.env` 값 (기본 `true`, SMTP 사용 시 `false`) | — | SMTP 없을 때만 `true` |
 | DATABASE_URL | `...@localhost:5433/exercise_log` | Neon URL | 동일 |
+| SMTP_HOST / SMTP_USER / SMTP_PASS | `.env`에서 읽음 | (선택) | 네이버 메일 발송 |
 | BLOB_READ_WRITE_TOKEN | — | Storage 연결 시 자동 | (선택) |
 | AUTH_URL | 설정 안 함 | 설정 안 함 | `http://localhost:3000` |
+
+### 이메일 인증 / 비밀번호 찾기 (네이버 메일)
+
+비밀번호 찾기에서 **입력한 @naver.com 주소**로 인증 코드 6자리가 발송됩니다.  
+(예: `hong123@naver.com` 입력 → `hong123@naver.com` 메일함으로 코드 도착)
+
+#### 초보자용 설정 (5분)
+
+**1단계 — 네이버 메일에서 SMTP 켜기**
+
+1. [mail.naver.com](https://mail.naver.com) 접속 후 로그인
+2. 우측 상단 **⚙ 환경설정** 클릭
+3. **POP3/IMAP** 탭 → **IMAP/SMTP 사용** 을 **사용함**으로 변경
+4. **저장**
+
+**2단계 — 앱 비밀번호 만들기**
+
+1. [nid.naver.com](https://nid.naver.com) → **내정보** → **보안설정**
+2. **2단계 인증** 켜기 (꺼져 있으면)
+3. **애플리케이션 비밀번호** → **생성**
+4. 이름 예: `FitLink` → 생성된 **16자리 비밀번호** 복사  
+   ⚠️ **네이버 로그인 비밀번호가 아닙니다!**
+
+**3단계 — `.env` 파일 수정**
+
+프로젝트 폴더의 `.env`를 열고 아래만 본인 정보로 바꿉니다.
+
+```env
+SMTP_USER="본인@naver.com"
+SMTP_PASS="여기에_앱비밀번호_16자리"
+SMTP_FROM="Fit Link <본인@naver.com>"
+AUTH_EMAIL_DEV_EXPOSE="false"
+```
+
+**4단계 — Docker 재시작**
+
+```bash
+npm run docker:restart
+```
+
+**5단계 — 테스트**
+
+1. `http://localhost:8082/forgot-password` 접속
+2. 코드를 받을 **네이버 메일** 입력 (가입 시 쓴 주소)
+3. **인증 코드 받기** 클릭
+4. 해당 네이버 메일 **받은편지함·스팸함**에서 `[Fit Link] 비밀번호 재설정 코드` 확인
+
+> **참고:** 코드는 누구나 받을 수 있지만, **비밀번호 변경**은 **이미 가입된 이메일**만 가능합니다.
+
+SMTP가 없으면 서버 콘솔에 코드가 출력되며, `AUTH_EMAIL_DEV_EXPOSE=true`일 때만 화면/API에 코드가 노출됩니다.

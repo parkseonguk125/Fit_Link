@@ -40,6 +40,7 @@ jobs:
           DATABASE_URL: postgresql://exercise:exercise@localhost:5433/exercise_log?schema=public
           AUTH_SECRET: ci-test-secret
           AUTH_URL: http://localhost:8082
+          AUTH_EMAIL_DEV_EXPOSE: "true"
           UPLOAD_DIR: ./uploads
           PLAYWRIGHT_BASE_URL: http://localhost:8082
           CI: true

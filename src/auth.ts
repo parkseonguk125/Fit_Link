@@ -22,7 +22,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) {
+        if (!user?.passwordHash) {
+          return null;
+        }
+
+        if (!user.emailVerified) {
           return null;
         }
 
@@ -40,4 +44,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    signIn: async ({ account }) => account?.provider === "credentials",
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.id = user.id!;
+        token.role = user.role;
+      }
+      return token;
+    },
+    session: async ({ session, token }) => {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as "USER" | "TRAINER";
+      }
+      return session;
+    },
+  },
 });

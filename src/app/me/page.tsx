@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
+import { FriendRequestStatCard } from "@/components/FriendRequestStatCard";
 import { ProfileForm } from "@/components/ProfileForm";
 import { TrainerProfileSummary } from "@/components/TrainerProfileSummary";
 import { UserBadge } from "@/components/UserBadge";
@@ -94,11 +95,9 @@ export default async function ProfilePage() {
               value={friendCount}
               label="친구"
             />
-            <ProfileStatCard
-              href="/following/requests"
-              value={friendRequestCount}
-              label="친구요청"
-              showBadge={unreadFriendRequests}
+            <FriendRequestStatCard
+              initialCount={friendRequestCount}
+              initialUnread={unreadFriendRequests}
             />
           </div>
         </div>

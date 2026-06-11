@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { signOut } from "next-auth/react";
+import { EmailVerificationField } from "@/components/EmailVerificationField";
 import { FieldHint } from "@/components/FieldHint";
 import { PasswordInput } from "@/components/PasswordInput";
 import { TrainerProfileFields } from "@/components/TrainerProfileFields";
@@ -11,7 +12,6 @@ import { verifyDisplayNameAvailable } from "@/lib/check-display-name-client";
 import { ROLE_OPTIONS } from "@/lib/constants";
 import {
   DISPLAY_NAME_TAKEN_HINT,
-  getEmailHint,
   getPasswordHint,
 } from "@/lib/form-validation";
 import {
@@ -21,6 +21,7 @@ import {
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
+  const [emailVerified, setEmailVerified] = useState(false);
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [role, setRole] = useState<"USER" | "TRAINER">("USER");
@@ -30,7 +31,6 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
 
   const { taken: displayNameTaken } = useDisplayNameAvailability(displayName);
-  const emailHint = getEmailHint(email);
   const passwordHint = getPasswordHint(password);
   const displayNameHint =
     displayName.trim() && displayNameTaken ? DISPLAY_NAME_TAKEN_HINT : undefined;
@@ -39,7 +39,12 @@ export default function SignupPage() {
     event.preventDefault();
     setError("");
 
-    if (displayNameHint || emailHint || passwordHint) {
+    if (!emailVerified) {
+      setError("이메일 인증을 완료해 주세요.");
+      return;
+    }
+
+    if (displayNameHint || passwordHint) {
       return;
     }
 
@@ -98,17 +103,14 @@ export default function SignupPage() {
           />
           <FieldHint message={displayNameHint} />
         </div>
-        <div>
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="이메일"
-            required
-            className="min-h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm outline-none focus:border-[#4A90A4]"
-          />
-          <FieldHint message={emailHint} />
-        </div>
+
+        <EmailVerificationField
+          email={email}
+          onEmailChange={setEmail}
+          verified={emailVerified}
+          onVerifiedChange={setEmailVerified}
+        />
+
         <div>
           <PasswordInput
             value={password}
@@ -154,7 +156,8 @@ export default function SignupPage() {
           type="submit"
           disabled={
             loading ||
-            Boolean(displayNameHint || emailHint || passwordHint)
+            !emailVerified ||
+            Boolean(displayNameHint || passwordHint)
           }
           className="min-h-12 w-full rounded-xl bg-[#4A90A4] text-sm font-semibold text-white disabled:opacity-60"
         >

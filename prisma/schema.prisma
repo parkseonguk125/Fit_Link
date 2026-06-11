@@ -65,10 +65,16 @@ enum FollowStatus {
   ACCEPTED
 }
 
+enum VerificationPurpose {
+  SIGNUP
+  PASSWORD_RESET
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
-  passwordHash String
+  passwordHash String?
+  emailVerified DateTime?
   displayName  String
   bio          String    @default("")
   role         Role      @default(USER)
@@ -82,6 +88,38 @@ model User {
   comments     Comment[]
   followers    Follow[]  @relation("following")
   following    Follow[]  @relation("follower")
+  accounts     Account[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model EmailVerification {
+  id        String              @id @default(cuid())
+  email     String
+  codeHash  String
+  purpose   VerificationPurpose
+  verified  Boolean             @default(false)
+  expiresAt DateTime
+  createdAt DateTime            @default(now())
+
+  @@index([email, purpose])
 }
 
 model Record {

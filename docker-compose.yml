@@ -29,6 +29,8 @@ services:
     image: fit_link_api:local
     container_name: fit_link_api
     restart: unless-stopped
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy
@@ -36,8 +38,15 @@ services:
       - "0.0.0.0:3002:3000"
     environment:
       DATABASE_URL: postgresql://exercise:exercise@db:5432/exercise_log?schema=public
-      AUTH_SECRET: docker-dev-secret-change-in-production
+      AUTH_SECRET: ${AUTH_SECRET:-docker-dev-secret-change-in-production}
       AUTH_TRUST_HOST: "true"
+      AUTH_URL: ${AUTH_URL:-http://localhost:8082}
+      AUTH_EMAIL_DEV_EXPOSE: ${AUTH_EMAIL_DEV_EXPOSE:-true}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
       UPLOAD_DIR: /app/uploads
       NODE_ENV: production
     volumes:
