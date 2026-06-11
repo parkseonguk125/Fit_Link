@@ -23,7 +23,7 @@ export function BottomNav() {
               active ? "font-semibold text-[#4A90A4]" : "text-gray-500"
             }`}
           >
-            <span className="relative text-lg leading-none">
+            <span className="relative text-lg leading-none" suppressHydrationWarning>
               {tab.icon}
               {showProfileBadge ? (
                 <span

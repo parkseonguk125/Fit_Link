@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useFriendRequestBadge } from "@/lib/friend-request-badge-client";
 
 export function FriendRequestStatCard({
@@ -11,8 +12,15 @@ export function FriendRequestStatCard({
   initialUnread: boolean;
 }) {
   const live = useFriendRequestBadge();
-  const count = live.ready ? live.count : initialCount;
-  const showBadge = live.ready ? live.unread : initialUnread;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const useLive = mounted && live.ready;
+  const count = useLive ? live.count : initialCount;
+  const showBadge = useLive ? live.unread : initialUnread;
 
   return (
     <Link

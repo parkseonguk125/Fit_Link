@@ -123,7 +123,7 @@ export function HeaderMenu() {
                         : "text-gray-800 hover:bg-white/60 active:bg-white/80"
                     }`}
                   >
-                    <span className="text-lg" aria-hidden>
+                    <span className="text-lg" aria-hidden suppressHydrationWarning>
                       {tab.icon}
                     </span>
                     <span>{tab.label}</span>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { FriendRequestStatCard } from "@/components/FriendRequestStatCard";
 import { ProfileForm } from "@/components/ProfileForm";
@@ -6,11 +7,11 @@ import { TrainerProfileSummary } from "@/components/TrainerProfileSummary";
 import { UserBadge } from "@/components/UserBadge";
 import { auth } from "@/auth";
 import {
-  getFriendUserIds,
-  getPendingFollowRequestCount,
-  hasUnreadFriendRequests,
+  getProfileFriendStats,
 } from "@/lib/follow";
 import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
 
 function ProfileStatCard({
   href,
@@ -42,22 +43,31 @@ function ProfileStatCard({
 
 export default async function ProfilePage() {
   const session = await auth();
-  const userId = session!.user!.id;
+  const userId = session?.user?.id;
+  if (!userId) {
+    redirect("/login");
+  }
 
-  const [user, friendCount, friendRequestCount, unreadFriendRequests] =
+  const [user, { friendCount, friendRequestCount, unreadFriendRequests }] =
     await Promise.all([
-    prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        _count: {
-          select: { records: true },
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          displayName: true,
+          email: true,
+          bio: true,
+          role: true,
+          trainerRegion: true,
+          trainerGymName: true,
+          trainerPosition: true,
+          trainerCareer: true,
+          _count: {
+            select: { records: true },
+          },
         },
-      },
-    }),
-    getFriendUserIds(userId).then((ids) => ids.length),
-    getPendingFollowRequestCount(userId),
-    hasUnreadFriendRequests(userId),
-  ]);
+      }),
+      getProfileFriendStats(userId),
+    ]);
 
   if (!user) {
     return null;

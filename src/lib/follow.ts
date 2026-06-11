@@ -100,31 +100,62 @@ export async function getPendingFollowRequests(userId: string) {
 }
 
 export async function hasUnreadFriendRequests(userId: string): Promise<boolean> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { friendRequestsSeenAt: true },
-  });
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { friendRequestsSeenAt: true },
+    });
 
-  if (!user) {
+    if (!user) {
+      return false;
+    }
+
+    const unreadCount = await prisma.follow.count({
+      where: {
+        followingId: userId,
+        status: "PENDING",
+        ...(user.friendRequestsSeenAt
+          ? { createdAt: { gt: user.friendRequestsSeenAt } }
+          : {}),
+      },
+    });
+
+    return unreadCount > 0;
+  } catch {
     return false;
   }
-
-  const unreadCount = await prisma.follow.count({
-    where: {
-      followingId: userId,
-      status: "PENDING",
-      ...(user.friendRequestsSeenAt
-        ? { createdAt: { gt: user.friendRequestsSeenAt } }
-        : {}),
-    },
-  });
-
-  return unreadCount > 0;
 }
 
 export async function markFriendRequestsSeen(userId: string): Promise<void> {
-  await prisma.user.update({
-    where: { id: userId },
-    data: { friendRequestsSeenAt: new Date() },
-  });
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { friendRequestsSeenAt: new Date() },
+    });
+  } catch {
+    // ignore when column/schema is unavailable
+  }
+}
+
+export async function getProfileFriendStats(userId: string): Promise<{
+  friendCount: number;
+  friendRequestCount: number;
+  unreadFriendRequests: boolean;
+}> {
+  try {
+    const [friendCount, friendRequestCount, unreadFriendRequests] =
+      await Promise.all([
+        getFriendUserIds(userId).then((ids) => ids.length),
+        getPendingFollowRequestCount(userId),
+        hasUnreadFriendRequests(userId),
+      ]);
+
+    return { friendCount, friendRequestCount, unreadFriendRequests };
+  } catch {
+    return {
+      friendCount: 0,
+      friendRequestCount: 0,
+      unreadFriendRequests: false,
+    };
+  }
 }
