@@ -18,9 +18,10 @@ export async function POST(request: Request) {
       message: result.message,
       devCode: result.devCode,
     });
-  } catch {
+  } catch (error) {
+    console.error("[verify-email/send]", error);
     return NextResponse.json(
-      { error: "인증 코드 발송 중 오류가 발생했습니다." },
+      { error: "인증 코드 발송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500 },
     );
   }

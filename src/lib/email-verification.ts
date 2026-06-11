@@ -20,6 +20,12 @@ function generateCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
+function getSmtpSetupHint() {
+  return process.env.VERCEL
+    ? "Vercel 프로젝트 Settings → Environment Variables에 네이버 SMTP(앱 비밀번호)를 추가해 주세요."
+    : ".env 파일에 네이버 SMTP(앱 비밀번호)를 입력해 주세요.";
+}
+
 export async function sendEmailVerificationCode(
   emailInput: string,
   purpose: VerificationPurpose,
@@ -27,6 +33,22 @@ export async function sendEmailVerificationCode(
   const email = normalizeEmail(emailInput);
   if (!email) {
     return { ok: false as const, error: "이메일을 입력해 주세요.", status: 400 };
+  }
+
+  if (!isNaverEmail(email)) {
+    return {
+      ok: false as const,
+      error: "네이버 메일(@naver.com) 주소만 사용할 수 있습니다.",
+      status: 400,
+    };
+  }
+
+  if (!isSmtpConfigured() && !shouldExposeDevCode()) {
+    return {
+      ok: false as const,
+      error: `메일 발송 설정이 필요합니다. ${getSmtpSetupHint()}`,
+      status: 503,
+    };
   }
 
   if (purpose === "SIGNUP") {
@@ -41,20 +63,11 @@ export async function sendEmailVerificationCode(
   }
 
   if (purpose === "PASSWORD_RESET") {
-    if (!isNaverEmail(email)) {
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (!existing?.passwordHash) {
       return {
-        ok: false as const,
-        error: "네이버 메일(@naver.com) 주소만 사용할 수 있습니다.",
-        status: 400,
-      };
-    }
-
-    if (!isSmtpConfigured() && !shouldExposeDevCode()) {
-      return {
-        ok: false as const,
-        error:
-          "메일 발송 설정이 필요합니다. .env 파일에 네이버 SMTP(앱 비밀번호)를 입력해 주세요.",
-        status: 503,
+        ok: true as const,
+        message: "등록된 이메일이면 인증 코드를 보냈습니다.",
       };
     }
   }

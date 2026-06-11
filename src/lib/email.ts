@@ -31,6 +31,9 @@ function getTransporterOptions(
         port: 465,
         secure: true,
         auth: { user, pass },
+        connectionTimeout: 10_000,
+        greetingTimeout: 10_000,
+        socketTimeout: 15_000,
       };
     }
 
@@ -40,6 +43,9 @@ function getTransporterOptions(
       secure: false,
       requireTLS: true,
       auth: { user, pass },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000,
     };
   }
 
@@ -50,6 +56,9 @@ function getTransporterOptions(
     port,
     secure: port === 465,
     auth: { user, pass },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
   };
 }
 

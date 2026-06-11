@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FieldHint } from "@/components/FieldHint";
-import { getEmailHint } from "@/lib/form-validation";
+import { getNaverEmailHint } from "@/lib/form-validation";
 
 type EmailVerificationFieldProps = {
   email: string;
@@ -23,7 +23,7 @@ export function EmailVerificationField({
   const [sending, setSending] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
-  const emailHint = getEmailHint(email);
+  const emailHint = getNaverEmailHint(email);
 
   async function handleSendCode() {
     setError("");
@@ -96,7 +96,7 @@ export function EmailVerificationField({
             setSendMessage("");
             setError("");
           }}
-          placeholder="이메일"
+          placeholder="example@naver.com"
           required
           className="min-h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm outline-none focus:border-[#4A90A4]"
         />

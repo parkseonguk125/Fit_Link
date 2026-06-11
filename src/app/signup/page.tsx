@@ -89,7 +89,9 @@ export default function SignupPage() {
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center bg-[#F8F9FA] px-6 py-8">
       <h1 className="text-2xl font-bold text-gray-900">회원가입</h1>
-      <p className="mt-2 text-sm text-gray-600">기본 정보를 입력해 주세요.</p>
+      <p className="mt-2 text-sm text-gray-600">
+        네이버 메일 주소로 인증 후 가입할 수 있습니다.
+      </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>
